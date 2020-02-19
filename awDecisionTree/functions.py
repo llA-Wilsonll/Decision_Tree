@@ -48,32 +48,6 @@ def calculate_logworth(contin_table):
 # print(calculate_logworth(np.array([[25,1],[1,25]])))
 
 """
-FUNCTION: list_combs
-Generates a list of all possible combinations of groups given the categories in the input, not including groups 
-whose complement is already in the list.
-
-E.g. if categories = [A,B,C,D,E,F], and [A,B,C] is already in the list, then its complement [D,E,F] should not be in it.
-If [A,B,C,D] is in the list, then [E,F] should not be in the list.
-
-Inputs:
-- categories: a list of the categories of which you want to take the combinations of
-"""
-def list_combs(categories, k):
-    iterlist = list(itertools.combinations(categories, k))
-    templist = iterlist  # Contains list of subsets of categories. I need to remove elements off this list, such that
-                         # an element's complement in categories is not added to this list.
-
-    for i in range(len(iterlist)):
-        try:
-            complement = [item for item in categories if item not in templist[i]]
-        except:
-            print("Iterating is complete, breaking from loop")
-            break
-        templist = list([item for item in templist if item != tuple(complement)])
-        # update templist to remove complement before next iteration
-    return templist
-
-"""
 FUNCTION: best_split
 - Calculates which split for a given input variable gives highest logworth value.
 
@@ -86,16 +60,26 @@ of observations that are higher and observations that are lower then the given s
 Inputs:
 - Y: array of the response variable
 - X: array of the predictor variable
-
 """
 def best_split(Y, X):
     # Get unique categories of X
     categories = list(set(X))
+    n = len(categories)
 
     # Create split combinations
     groups = []
     for i in range(ceil(n / 2), n):
-        groups = groups + list_combs(categories, i)
+        test_list = [subset for subset in itertools.combinations(categories, i)]
+
+        # If n is even, then I need to remove elements off this list, such that an element's complement in categories
+        # is not added to this list.
+        if i == (n / 2):
+            for subset in test_list:
+                composite = np.setdiff1d(categories, subset)
+                composite = tuple(composite)
+                test_list.remove(composite)
+
+        split_groups = groups + test_list
 
     #Loop through all combinations
        # Create contingency table
