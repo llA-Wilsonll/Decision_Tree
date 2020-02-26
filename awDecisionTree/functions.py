@@ -105,6 +105,7 @@ def best_split(Y, X):
         logworth = calculate_logworth(contin)
 
         # Calculating best split so far at each iteration
+        # Note: this will always be entered on first iteration as logworth is always >0
         if logworth > max_logworth:
             max_logworth = logworth
             max_split = split
@@ -113,9 +114,9 @@ def best_split(Y, X):
     return max_contin, max_logworth, max_split
 
 
-max_contin, max_logworth, max_split = best_split(Y=[0, 1, 0, 0, 1], X=[2, 5, 2, 10, 4])
-# Determine max logworth, split combination
-print("Contingency Table:")
-print(max_contin)
-print("Max logworth: " + str(max_logworth))
-print("Best Split: " + str(max_split))
+if __name__ == "__main__":
+    max_contin, max_logworth, max_split = best_split(Y=[0, 1, 0, 0, 1], X=[2, 5, 2, 10, 4])
+    # Determine max logworth, split combination
+    print("Contingency Table:\n{}".format(max_contin))
+    print("Max logworth: {}".format(max_logworth))
+    print("Best Split: {}".format(max_split))
