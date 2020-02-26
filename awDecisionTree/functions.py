@@ -29,6 +29,8 @@ NOTE: currently this is set up for CATEGORICAL response (interval response would
 with frequency (number of observations) as our code is currently expecting. It would probably have mean or sum
 in which case I don't believe the Chi-squared statistic would be used.
 """
+
+
 def calculate_logworth(contin_table):
     # Calculate Expected frequencies
     row_totals = np.sum(contin_table, axis=1)
@@ -47,6 +49,7 @@ def calculate_logworth(contin_table):
 
 # print(calculate_logworth(np.array([[25,1],[1,25]])))
 
+
 """
 FUNCTION: best_split
 - Calculates which split for a given input variable gives highest logworth value.
@@ -61,30 +64,58 @@ Inputs:
 - Y: array of the response variable
 - X: array of the predictor variable
 """
+
+
 def best_split(Y, X):
-    # Get unique categories of X
-    categories = list(set(X))
+    categories = list(set(X))  # Get unique categories of X
+    categories.sort()  # Sorting so complement doesn't have elements in wrong order
     n = len(categories)
 
     # Create split combinations
-    groups = []
+    split_groups = []
     for i in range(ceil(n / 2), n):
+        # A list of combinations of values in the list "categories" that are of size i
         test_list = [subset for subset in itertools.combinations(categories, i)]
 
         # If n is even, then I need to remove elements off this list, such that an element's complement in categories
         # is not added to this list.
         if i == (n / 2):
             for subset in test_list:
-                composite = np.setdiff1d(categories, subset)
-                composite = tuple(composite)
-                test_list.remove(composite)
+                complement = np.sort(np.setdiff1d(categories, subset))  # Adding sort to ensure correct order before
+                # using remove method
+                complement = tuple(complement)  # Making a tuple as that is the form of the combinations in test_list
+                test_list.remove(complement)  # Removing the complement
 
-        split_groups = groups + test_list
+        split_groups = split_groups + test_list
 
-    #Loop through all combinations
-       # Create contingency table
-       # Calc logworth
+    # Loop through all combinations and determine which one has the maximum logworth
+    max_logworth = 0.0
 
-    #Determine max logworth, split combination
+    for split in split_groups:
+        contin = np.zeros([len(set(Y)), 2])  # Number of rows is equal to the number of unique categories of Y
 
-    return split_groups, max_logworth
+        # Create contingency table
+        for k in range(len(X)):
+            if X[k] in split:
+                contin[Y[k], 0] += 1  # Y needs to have its categories encoded as 0,1,2,.....
+            else:
+                contin[Y[k], 1] += 1
+
+        # Calc logworth
+        logworth = calculate_logworth(contin)
+
+        # Calculating best split so far at each iteration
+        if logworth > max_logworth:
+            max_logworth = logworth
+            max_split = split
+            max_contin = contin
+
+    return max_contin, max_logworth, max_split
+
+
+max_contin, max_logworth, max_split = best_split(Y=[0, 1, 0, 0, 1], X=[2, 5, 2, 10, 4])
+# Determine max logworth, split combination
+print("Contingency Table:")
+print(max_contin)
+print("Max logworth: " + str(max_logworth))
+print("Best Split: " + str(max_split))
