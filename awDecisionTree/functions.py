@@ -12,6 +12,8 @@ from scipy import stats
 from math import log, ceil
 # Using itertools so I can get all combinations of the categories of categorical variables
 import itertools
+# Using pandas as input data will likely be imported as a pandas DataFrame
+import pandas as pd
 
 """
 FUNCTION: calculate_logworth
@@ -107,16 +109,66 @@ def best_split(Y, X):
         # Calculating best split so far at each iteration
         # Note: this will always be entered on first iteration as logworth is always >0
         if logworth > max_logworth:
-            max_logworth = logworth
             max_split = split
+            max_logworth = logworth
             max_contin = contin
 
-    return max_contin, max_logworth, max_split
+    return max_split, max_logworth, max_contin
+
+
+"""
+FUNCTION: final_split_point
+- Calculates which variable has the best split given an input data set (Pandas dataframe)
+
+It compares the logworth for the best split for each predictor variable and determines which split overall is the best
+
+Inputs:
+- df_input: Pandas dataframe of the input dataset (including predictor and response variables)
+- y_index: index of the column in df_input that is the response variable (Y)
+"""
+
+
+def final_split_point(df_input, y_index):
+    y_values = list(df_input.iloc[:, y_index])  # extracting y values from Pandas dataframe into a list
+
+    final_logworth = 0.0  # initialising logworth to 0
+    for i in [x for x in range(len(df_input.columns)) if x != y_index]:
+        x_values = list(df_input.iloc[:, i])  # extracting x values from Pandas dataframe into a list
+        x_name = df_input.columns[i]  # name of the current X variable being used
+        max_split, max_logworth, max_contin = best_split(Y=y_values, X=x_values)
+
+        # Calculating best split so far at each iteration
+        # Note: this will always be entered on first iteration as logworth is always >0
+        if max_logworth > final_logworth:
+            final_split = max_split
+            split_variable = x_name
+            final_logworth = max_logworth
+            final_contin = max_contin
+
+    return final_split, split_variable, final_logworth, final_contin
 
 
 if __name__ == "__main__":
-    max_contin, max_logworth, max_split = best_split(Y=[0, 1, 0, 0, 1], X=[2, 5, 2, 10, 4])
+    df_in = df = pd.DataFrame([['A', 'B', 0, 'C'],
+                               ['Z', 'b', 0, 'another'],
+                               ['W', 'B', 1, 'two'],
+                               ['A', 'BB', 0, 'another'],
+                               ['A', 'BB', 1, 'another'],
+                               ['Z', 'BB', 0, 'C'],
+                               ['W', 'B', 0, 'C'],
+                               ['A', 'b', 1, 'two'],
+                               ['Z', 'B', 1, 'two'],
+                               ['A', 'b', 1, 'C'],
+                               ['A', 'B', 0, 'C'],
+                               ['W', 'b', 1, 'another'],
+                               ['A', 'b', 1, 'C'],
+                               ['A', 'BB', 1, 'two'],
+                               ['W', 'BB', 0, 'C'],
+                               ['A', 'b', 0, 'another'],
+                               ['W', 'B', 0, 'C']], columns=['x1', 'x2', 'y', 'x3'])
+    split, split_variable, logworth, contin = final_split_point(df_in, 2)
     # Determine max logworth, split combination
-    print("Contingency Table:\n{}".format(max_contin))
-    print("Max logworth: {}".format(max_logworth))
-    print("Best Split: {}".format(max_split))
+    print("Split Variable: {}".format(split_variable))
+    print("Best Split: {}".format(split))
+    print("Max logworth: {}".format(logworth))
+    print("Contingency Table:\n{}".format(contin))
